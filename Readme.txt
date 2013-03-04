@@ -2,6 +2,10 @@ Packages used:
 
 Libraries: 
 
+IMU 6 degrees:
+6dof(Arduino)[V7]
+http://bildr.org/2012/03/stable-orientation-digital-imu-6dof-arduino/
+
 Free IMU:
 FreeIMU-20121122_1126
 http://www.varesano.net/projects/hardware/FreeIMU
