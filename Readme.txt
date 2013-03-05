@@ -1,3 +1,9 @@
+How to use:
+
+	Arduino Library 'FreeSixIMU' plaatsen in goede folder.
+
+ 
+
 Packages used:
 
 Libraries: 
