@@ -26,13 +26,14 @@ void setup() {
   Wire.begin();
 
   delay(5);
-  my3IMU.init();
+  my3IMU.init(); //begin the IMU
   delay(5);
 }
 
 
 void loop() { 
   my3IMU.getQ(q);
+  
   serialPrintFloatArr(q, 4);
   Serial.println(""); //line break
  
