@@ -7,6 +7,8 @@ float angles[3]; // yaw pitch roll
 float theta;
 float motor;
 
+boolean motordir = true;
+
 const int analogOutPin = 9;
 
 // Set the FreeSixIMU object
@@ -35,21 +37,30 @@ void loop() {
   
   theta = angles[1];
   
-  motor = map(theta, 0, 50, 0, 250);
+  motor = map(theta, -50, 50, 0, 250);
   
   if (motor < 0)
     {
-      motor = 0;
+      motordir = false;
     }
     
-     if (motor > 250)
+  if (motor > 0)
     {
-      motor = 250;
+      motordir = true;
     }
   
-  Serial.println(motor);
+     if (motor > 255)
+    {
+      motor = 255;
+    }
+    
+    motor = abs(motor);
+  
+  Serial.print(motor);
+  Serial.println(motordir);
   
   analogWrite(analogOutPin, motor);
+ 
   
 }
 
