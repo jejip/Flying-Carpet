@@ -1,5 +1,6 @@
 //aanpassen van de PWM frequenties:
 
+// gevonden op: http://playground.arduino.cc/Code/PwmFrequency
 
 
 
@@ -50,7 +51,7 @@ setPwmFrequency(10, 1024);
  * PWM frequency divisors. His post can be viewed at:
  *   http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1235060559/0#4
  */
- 
+
 void setPwmFrequency(int pin, int divisor) {
   byte mode;
   if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
