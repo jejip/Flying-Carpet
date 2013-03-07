@@ -1,6 +1,8 @@
 How to use:
 
-	Arduino Library 'FreeSixIMU' plaatsen in goede folder.
+	Arduino Libraries used:
+	FreeSixIMU
+	Matrix
 
  
 
