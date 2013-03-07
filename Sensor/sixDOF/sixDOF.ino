@@ -7,6 +7,8 @@ float angles[3]; // yaw pitch roll
 float theta;
 float motor;
 
+const int analogOutPin = 9;
+
 // Set the FreeSixIMU object
 FreeSixIMU sixDOF = FreeSixIMU();
 
@@ -29,11 +31,25 @@ void loop() {
 //  Serial.print(" | ");
 //  Serial.println(angles[2]);
   
-  delay(100); 
+//  delay(100); 
   
   theta = angles[1];
   
-  map(theta, 0, 50, 0, 250);
+  motor = map(theta, 0, 50, 0, 250);
+  
+  if (motor < 0)
+    {
+      motor = 0;
+    }
+    
+     if (motor > 250)
+    {
+      motor = 250;
+    }
+  
+  Serial.println(motor);
+  
+  analogWrite(analogOutPin, motor);
   
 }
 
