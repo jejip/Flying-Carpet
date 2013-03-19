@@ -23,7 +23,7 @@ void loop() {
   
   sixDOF.getAngles(angles);
 
-  Serial.println(angles[1]);
+  Serial.println(angles[1]); //only display theta
   
   delay(100); 
 }
