@@ -15,16 +15,16 @@
 #define CURRENTREG          0x05                    // Byte to read motor current
 
 
-////PID variabelen
-//double Input, Output;
-// // PID waarden initialiseren.
-//double Kp = 2311.3817521;
-//double Ki = 0;
-//double Kd = 253.03382238;
-//double Setpoint = 0.01;
-//
-////PID: Specify the links and initial tuning parameters
-//PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
+//PID variabelen
+double Input, Output;
+ // PID waarden initialiseren.
+double Kp = 50;
+double Ki = 0;
+double Kd = 50;
+double Setpoint = 0;
+
+//PID: Specify the links and initial tuning parameters
+PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 float angles[3];
 float angle;
@@ -50,11 +50,8 @@ void setup(){
   sensor.init();                         // begin the IMU
   delay(5);
   
-  Serial.println("reset");
-  int software = getData(SOFTREG);
-  Serial.print("MDO3 softaware versie: ");
-  Serial.println(software);
-  
+  Serial.print("reset");
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0);
   
   // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
   // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
@@ -73,14 +70,13 @@ void setup(){
 //  sensor.getEuler(angles);
 //  Input = angles[1] - offset;
 //  
-//  //turn the PID on
-//  myPID.SetMode(AUTOMATIC);  
+  //turn the PID on
+  myPID.SetMode(AUTOMATIC);  
 }
 
 void loop(){
   sensor.getEuler(angles);
-  angle = angles[1] - offset;
-  sendPlotData("hoek van sensor", angle);
+  angle = angles[1];
   
   if(angle <= 2 && angle >= -2){
     angle = 0;
@@ -92,30 +88,27 @@ void loop(){
   else{
     motorDir = 2;
   }
-//  // output berekenen met PID, input is de hoekin radialen.
-//  Input = (angle * 3.14159/180);
-  double Output = angle;
-  // myPID.Compute();  
+ // output berekenen met PID, input is de hoekin radialen.
+  Input = (angle * 3.14159/180);
+  Serial.print(Input);
+  Serial.println(" voor PID");
+  Serial.println();
+  myPID.Compute();
+  Serial.print(Output);
+  Serial.println(" na PID");  
   
   // sending I2C data
+  if(Output > 100){
+    Output = 100;
+  }
   sendData(CMDBYTE, motorDir, SPEEDBYTE, Output);
-
-  // sending data to plot  
-  sendPlotData("Output", Output);
-  sendPlotData("Motor Direction", motorDir);
-}
-
-byte getData(byte reg){                   // function for getting data from MD03
-  Wire.beginTransmission(ADDRESS1);
-    Wire.write(reg);
-  Wire.endTransmission();
+  Serial.print( angle );
+  Serial.print(" ");
+  Serial.println(Output);
+  delay(10);
   
-  Wire.requestFrom(ADDRESS1, 1);         // Requests byte from MD03
-  while(Wire.available() < 1);          // Waits for byte to become availble
-  byte data = Wire.read();
-
-  return(data);
 }
+
 
 void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         // Function for sending data to MD03
   Wire.beginTransmission(ADDRESS1);         // Send data to MD03
@@ -123,14 +116,13 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  Wire.endTransmission(false);
+  Wire.endTransmission();
   Wire.beginTransmission(ADDRESS2);
     Wire.write(dirReg);
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  Wire.endTransmission(false);
-  delay(5);
+  Wire.endTransmission();
 }
 
 void sendPlotData(String seriesName, float data){
