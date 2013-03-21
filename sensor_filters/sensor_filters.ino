@@ -7,7 +7,7 @@
 
 
 #define ADDRESS1            0x58                    // Address of MD03 for motor 1
-#define ADDRESS2            0x59                    // Address of MD03 for motor 2
+#define ADDRESS2            0x5B                    // Address of MD03 for motor 2
 #define SOFTREG             0x07                    // Byte to read software
 #define CMDBYTE             0x00                    // Command byte
 #define SPEEDBYTE           0x02                    // Byte to write to speed register
@@ -15,16 +15,16 @@
 #define CURRENTREG          0x05                    // Byte to read motor current
 
 
-//PID variabelen
-double Input, Output;
- // PID waarden initialiseren.
-double Kp = 2311.3817521;
-double Ki = 0;
-double Kd = 253.03382238;
-double Setpoint = 0.01;
-
-//PID: Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
+////PID variabelen
+//double Input, Output;
+// // PID waarden initialiseren.
+//double Kp = 2311.3817521;
+//double Ki = 0;
+//double Kd = 253.03382238;
+//double Setpoint = 0.01;
+//
+////PID: Specify the links and initial tuning parameters
+//PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 float angles[3];
 float angle;
@@ -58,23 +58,23 @@ void setup(){
   
   // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
   // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
-  double offset = 0;
-  double check = 1000;
-  while (abs(offset - check) > 1){
-    for(int i = 0; i < 30; i++){
-    sensor.getEuler(angles);
-    offset += angles[1];
-    delay(10);
-    }
-    offset = offset / 30;
-    sensor.getEuler(angles);
-    check = angles[1];
-  }  
-  sensor.getEuler(angles);
-  Input = angles[1] - offset;
-  
-  //turn the PID on
-  myPID.SetMode(AUTOMATIC);  
+//  double offset = 0;
+//  double check = 1000;
+//  while (abs(offset - check) > 1){
+//    for(int i = 0; i < 30; i++){
+//    sensor.getEuler(angles);
+//    offset += angles[1];
+//    delay(10);
+//    }
+//    offset = offset / 30;
+//    sensor.getEuler(angles);
+//    check = angles[1];
+//  }  
+//  sensor.getEuler(angles);
+//  Input = angles[1] - offset;
+//  
+//  //turn the PID on
+//  myPID.SetMode(AUTOMATIC);  
 }
 
 void loop(){
@@ -93,8 +93,9 @@ void loop(){
     motorDir = 2;
   }
 //  // output berekenen met PID, input is de hoekin radialen.
-  Input = (angle * 3.14159/180);
-  myPID.Compute();  
+//  Input = (angle * 3.14159/180);
+  double Output = angle;
+  // myPID.Compute();  
   
   // sending I2C data
   sendData(CMDBYTE, motorDir, SPEEDBYTE, Output);
@@ -122,7 +123,14 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
+  Wire.beginTransmission(ADDRESS2);
+    Wire.write(dirReg);
+    Wire.write(dirVal);
+    Wire.write(speedReg);
+    Wire.write(speedVal);
+  Wire.endTransmission(false);
+  delay(5);
 }
 
 void sendPlotData(String seriesName, float data){
