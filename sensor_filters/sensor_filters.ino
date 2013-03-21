@@ -107,6 +107,11 @@ void loop(){
   Serial.println(Output);
   delay(10);
   
+  //kijk of de wire.endtransmission een fout geeft
+//  int return_value = Wire.endTransmission ();
+//Serial.print ("end returns:");
+//Serial.println (return_value);
+  
 }
 
 
