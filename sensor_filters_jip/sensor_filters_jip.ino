@@ -108,7 +108,7 @@ void loop(){
   delay(10);
   
   //serial read voor PID waardes
-  if (Serial.available() > 0 {
+  //if (Serial.available() > 0 {
     //read incoming byte
     
   
