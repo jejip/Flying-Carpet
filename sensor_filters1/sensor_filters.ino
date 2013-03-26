@@ -18,9 +18,9 @@
 //PID variabelen
 double Input, Output;
  // PID waarden initialiseren.
-double Kp = 24069.31;
+double Kp = 50;
 double Ki = 0;
-double Kd = 2004.31;
+double Kd = 50;
 double Setpoint = 0;
 
 //PID: Specify the links and initial tuning parameters
@@ -30,10 +30,18 @@ float angles[3];
 float angle;
 double offset;
 
+
 FreeSixIMU sensor = FreeSixIMU();        // aanmaken van FreeSixIMU object
 
 //I2C
+
+
+
+
 byte motorDir = 1;
+
+
+
 
 void setup(){
   Serial.begin(9600);                    // activeer serial communicatie
@@ -47,29 +55,28 @@ void setup(){
   
   // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
   // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
-  double offset = 0;
-  double check = 1000;
-  while (abs(offset - check) > 1){
-    for(int i = 0; i < 30; i++){
-    sensor.getEuler(angles);
-    offset += angles[1];
-    delay(10);
-    }
-    offset = offset / 30;
-    sensor.getEuler(angles);
-    check = angles[1];
-  }  
-  sensor.getEuler(angles);
-  Input = angles[1] - offset;
-  
+//  double offset = 0;
+//  double check = 1000;
+//  while (abs(offset - check) > 1){
+//    for(int i = 0; i < 30; i++){
+//    sensor.getEuler(angles);
+//    offset += angles[1];
+//    delay(10);
+//    }
+//    offset = offset / 30;
+//    sensor.getEuler(angles);
+//    check = angles[1];
+//  }  
+//  sensor.getEuler(angles);
+//  Input = angles[1] - offset;
+//  
   //turn the PID on
   myPID.SetMode(AUTOMATIC);  
 }
 
 void loop(){
   sensor.getEuler(angles);
-  delay(10);
-  angle = angles[1]-offset;
+  angle = angles[1];
   
   if(angle <= 2 && angle >= -2){
     angle = 0;
@@ -85,22 +92,23 @@ void loop(){
   Input = (angle * 3.14159/180);
   Serial.print(Input);
   Serial.println(" voor PID");
-  myPID.Compute();
-  
-  byte b = (byte)Output;
-  Serial.print(b);
-  Serial.println(" na PID"); 
   Serial.println();
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, (b)); 
+  myPID.Compute();
+  Serial.print(Output);
+  Serial.println(" na PID");  
   
-//  for(int i = 0; i < 10000; i++){
-//      Serial.println(i % 100);
-//      sendData(CMDBYTE, motorDir, SPEEDBYTE, (byte)(i % 100)); 
-//  }
+  // sending I2C data
+  if(Output > 100){
+    Output = 100;
+  }
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, Output);
+  Serial.print( angle );
+  Serial.print(" ");
+  Serial.println(Output);
+  delay(10);
   
-
   //serial read voor PID waardes
-  //if (Serial.available() > 0 {
+  if (Serial.available() > 0 {
     //read incoming byte
     
   
@@ -108,9 +116,7 @@ void loop(){
 //  int return_value = Wire.endTransmission ();
 //Serial.print ("end returns:");
 //Serial.println (return_value);
-
-  // sending I2C data
-
+  
 }
 
 
@@ -120,17 +126,13 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  byte b = Wire.endTransmission(true);
-  Serial.print("Wire return: ");
-  Serial.println(b);
-  
+  Wire.endTransmission();
   Wire.beginTransmission(ADDRESS2);
     Wire.write(dirReg);
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  b = Wire.endTransmission();
-  Serial.println(b);  
+  Wire.endTransmission();
 }
 
 void sendPlotData(String seriesName, float data){
