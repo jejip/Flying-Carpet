@@ -25,18 +25,18 @@ import controlP5.*;
 int windowWidth = 900;      // set the size of the 
 int windowHeight = 600;     // form
 
-float InScaleMin = 0;       // set the Y-Axis Min
-float InScaleMax = 1024;    // and Max for both
-float OutScaleMin = 0;      // the top and 
-float OutScaleMax = 255;    // bottom trends
+float InScaleMin = -2;       // set the Y-Axis Min
+float InScaleMax = 2;    // and Max for both
+float OutScaleMin = -2;      // the top and 
+float OutScaleMax = 2;    // bottom trends
 
 
-int windowSpan = 300000;    // number of mS into the past you want to display
-int refreshRate = 100;      // how often you want the graph to be reDrawn;
+int windowSpan = 5000;    // number of mS into the past you want to display
+int refreshRate = 10;      // how often you want the graph to be reDrawn;
 
 //float displayFactor = 1; //display Time as Milliseconds
-//float displayFactor = 1000; //display Time as Seconds
-float displayFactor = 60000; //display Time as Minutes
+float displayFactor = 100; //display Time as Seconds
+//float displayFactor = 60000; //display Time as Minutes
 
 String outputFileName = ""; // if you'd like to output data to 
 // a file, specify the path here
@@ -89,7 +89,7 @@ void setup()
   size(windowWidth , windowHeight);
 
   println(Serial.list());                                           // * Initialize Serial
-  myPort = new Serial(this, Serial.list()[1], 9600);                //   Communication with
+  myPort = new Serial(this, Serial.list()[4], 9600);                //   Communication with
   myPort.bufferUntil(10);                                           //   the Arduino
 
   controlP5 = new ControlP5(this);                                  // * Initialize the various

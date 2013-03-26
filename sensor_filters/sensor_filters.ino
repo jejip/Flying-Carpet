@@ -19,9 +19,9 @@
 //PID variabelen
 double Input, Output;
  // PID waarden initialiseren.
-double Kp = 24069.31;
+double Kp = 100;
 double Ki = 0;
-double Kd = 2004.31;
+double Kd = 500;
 double Setpoint = 0;
 
 //PID: Specify the links and initial tuning parameters
@@ -56,20 +56,20 @@ void setup(){
   
   // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
   // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
-  double offset = 0;
-  double check = 1000;
-  while (abs(offset - check) > 1){
-    for(int i = 0; i < 30; i++){
-    sensor.getEuler(angles);
-    offset += angles[1];
-    delay(10);
-    }
-    offset = offset / 30;
-    sensor.getEuler(angles);
-    check = angles[1];
-  }  
-  sensor.getEuler(angles);
-  Input = angles[1] - offset;
+//  double offset = 0;
+//  double check = 1000;
+//  while (abs(offset - check) > 1){
+//    for(int i = 0; i < 30; i++){
+//    sensor.getEuler(angles);
+//    offset += angles[2];
+//    delay(10);
+//    }
+//    offset = offset / 30;
+//    sensor.getEuler(angles);
+//    check = angles[2];
+//  }  
+//  sensor.getEuler(angles);
+//  Input = angles[2] - offset;
   
   //turn the PID on
   myPID.SetMode(AUTOMATIC);  
@@ -77,21 +77,20 @@ void setup(){
 
 void loop(){
   sensor.getEuler(angles);
-  delay(10);
-  angle = angles[1]-offset;
+  angle = angles[2]-offset;
   
   if(angle <= 2 && angle >= -2){
     angle = 0;
   }
   else if(angle > 0){
-    //angle = angle * -1;
+    angle = angle * -1;
     motorDir = 1;
   } 
   else{
     motorDir = 2;
   }
  // output berekenen met PID, input is de hoekin radialen.
-  Input = (angle * 3.14159/180);
+  Input = (angle * (3.14159/180));
 //  Serial.print(Input);
 //  Serial.println(" voor PID");
   myPID.Compute();
@@ -101,14 +100,14 @@ void loop(){
   {
     SerialReceive();
     SerialSend();
-    serialTime+=200;
+    serialTime+=20;
   }
-  
+    
   byte b = (byte)Output;
 //  Serial.print(b);
 //  Serial.println(" na PID"); 
 //  Serial.println();
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, (b)); 
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, b); 
   
 //  for(int i = 0; i < 10000; i++){
 //      Serial.println(i % 100);
@@ -238,7 +237,7 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  byte b = Wire.endTransmission(true);
+  Wire.endTransmission(true);
 //  Serial.print("Wire return: ");
 //  Serial.println(b);
   
@@ -247,7 +246,7 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  b = Wire.endTransmission();
+  Wire.endTransmission();
 //  Serial.println(b);  
 }
 
