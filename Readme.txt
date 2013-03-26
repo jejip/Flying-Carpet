@@ -3,6 +3,7 @@ How to use:
 	Arduino Libraries used:
 	FreeSixIMU
 	Matrix
+	PID_v1
 
  
 
