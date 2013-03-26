@@ -51,7 +51,7 @@ void setup(){
   sensor.init();                         // begin the IMU
   delay(5);
   
-  Serial.print("reset");
+//  Serial.print("reset");
   sendData(CMDBYTE, motorDir, SPEEDBYTE, 0);
   
   // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
@@ -84,7 +84,7 @@ void loop(){
     angle = 0;
   }
   else if(angle > 0){
-    angle = angle * -1;
+    //angle = angle * -1;
     motorDir = 1;
   } 
   else{
@@ -101,7 +101,7 @@ void loop(){
   {
     SerialReceive();
     SerialSend();
-    serialTime+=500;
+    serialTime+=200;
   }
   
   byte b = (byte)Output;
@@ -239,8 +239,8 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(speedReg);
     Wire.write(speedVal);
   byte b = Wire.endTransmission(true);
-  Serial.print("Wire return: ");
-  Serial.println(b);
+//  Serial.print("Wire return: ");
+//  Serial.println(b);
   
   Wire.beginTransmission(ADDRESS2);
     Wire.write(dirReg);
@@ -248,16 +248,16 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(speedReg);
     Wire.write(speedVal);
   b = Wire.endTransmission();
-  Serial.println(b);  
+//  Serial.println(b);  
 }
 
-void sendPlotData(String seriesName, float data){
-    Serial.print("{");
-    Serial.print(seriesName);
-    Serial.print(",T,");
-    Serial.print(data);
-    Serial.println("}");
-} 
+//void sendPlotData(String seriesName, float data){
+//    Serial.print("{");
+//    Serial.print(seriesName);
+//    Serial.print(",T,");
+//    Serial.print(data);
+//    Serial.println("}");
+//} 
 
 
   
