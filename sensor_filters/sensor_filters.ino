@@ -4,7 +4,7 @@
 
 #include <Wire.h>
 #include <PID_v1.h>
-
+#include <PID_AutoTune_v0.h>
 
 #define ADDRESS1            0x58                    // Address of MD03 for motor 1
 #define ADDRESS2            0x5B                    // Address of MD03 for motor 2
@@ -16,22 +16,33 @@
 
 // *** PID ***
 
-//PID variabelen
+//PID variables
 double Input, Output;
- // PID waarden initialiseren.
-double Kp = 100;
+// PID initialising variables
+double Kp = 200;
 double Ki = 0;
-double Kd = 500;
+double Kd = 200;
 double Setpoint = 0;
 
-//PID: Specify the links and initial tuning parameters
+//Specify the links and initial tuning parameters
 PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
-//PID frontend
-//Specify the links and initial tuning parameters
-//PID myPID(&Input, &Output, &Setpoint,2,5,1, DIRECT);
-
 unsigned long serialTime; //this will help us know when to talk with processing
+
+// autotune
+byte ATuneModeRemember=2;
+
+double kpmodel=1.5, taup=100, theta[50];
+double outputStart=5;
+double aTuneStep=50, aTuneNoise=1, aTuneStartValue=100;
+unsigned int aTuneLookBack=20;
+
+boolean tuning = false;
+unsigned long  modelTime, serialTime;
+
+PID_ATune aTune(&input, &output);
+
+boolean useSimulation = true;
 
 /// *** Sensor ***
 
@@ -39,12 +50,14 @@ float angles[3];
 float angle;
 double offset;
 
-FreeSixIMU sensor = FreeSixIMU();        // aanmaken van FreeSixIMU object
+FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
 //I2C
 byte motorDir = 1;
 
+
 void setup(){
+  
   Serial.begin(9600);                    // activeer serial communicatie
   Wire.begin();                         // initialiseer I2C communicatiemet sensor 
   delay(5);
@@ -54,8 +67,8 @@ void setup(){
 //  Serial.print("reset");
   sendData(CMDBYTE, motorDir, SPEEDBYTE, 0);
   
-  // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
-  // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
+//  // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
+//  // vervolgens meet hij de hoke nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
 //  double offset = 0;
 //  double check = 1000;
 //  while (abs(offset - check) > 1){
@@ -71,13 +84,78 @@ void setup(){
 //  sensor.getEuler(angles);
 //  Input = angles[2] - offset;
   
+  //autotune
+  if(useSimulation)
+  {
+    for(byte i=0;i<50;i++)
+    {
+      theta[i]=outputStart;
+    }
+    modelTime = 0;
+  }
+  
   //turn the PID on
   myPID.SetMode(AUTOMATIC);  
 }
 
+//autotune
+if(tuning)
+  {
+    tuning=false;
+    changeAutoTune();
+    tuning=true;
+  }
+  
+  serialTime = 0;
+
 void loop(){
   sensor.getEuler(angles);
   angle = angles[2]-offset;
+  
+  //autotune
+  unsigned long now = millis();
+
+  if(!useSimulation)
+  { //pull the input in from the real world
+    input = analogRead(0);
+  }
+  
+  if(tuning)
+  {
+    byte val = (aTune.Runtime());
+    if (val!=0)
+    {
+      tuning = false;
+    }
+    if(!tuning)
+    { //we're done, set the tuning parameters
+      kp = aTune.GetKp();
+      ki = aTune.GetKi();
+      kd = aTune.GetKd();
+      myPID.SetTunings(kp,ki,kd);
+      AutoTuneHelper(false);
+    }
+  }
+  else myPID.Compute();
+  
+  if(useSimulation)
+  {
+    theta[30]=output;
+    if(now>=modelTime)
+    {
+      modelTime +=100; 
+      DoModel();
+    }
+  }
+  else
+  {
+     analogWrite(0,output); 
+  }
+  
+  //set the calibration LED
+//  if Serial.available() > 0) {
+//  digitalWrite(12, HIGH);
+//  }
   
   if(angle <= 2 && angle >= -2){
     angle = 0;
@@ -159,6 +237,7 @@ foo;                   // float array
 //  14-17: float P_Param
 //  18-21: float I_Param
 //  22-245: float D_Param
+
 void SerialReceive()
 {
 
@@ -228,6 +307,47 @@ void SerialSend()
   else Serial.println("Reverse");
 }
 
+//PID autotune
+
+void changeAutoTune()
+{
+ if(!tuning)
+  {
+    //Set the output to the desired starting frequency.
+    output=aTuneStartValue;
+    aTune.SetNoiseBand(aTuneNoise);
+    aTune.SetOutputStep(aTuneStep);
+    aTune.SetLookbackSec((int)aTuneLookBack);
+    AutoTuneHelper(true);
+    tuning = true;
+  }
+  else
+  { //cancel autotune
+    aTune.Cancel();
+    tuning = false;
+    AutoTuneHelper(false);
+  }
+}
+
+void AutoTuneHelper(boolean start)
+{
+  if(start)
+    ATuneModeRemember = myPID.GetMode();
+  else
+    myPID.SetMode(ATuneModeRemember);
+}
+
+void DoModel()
+{
+  //cycle the dead time
+  for(byte i=0;i<49;i++)
+  {
+    theta[i] = theta[i+1];
+  }
+  //compute the input
+  input = (kpmodel / taup) *(theta[0]-outputStart) + input*(1-1/taup) + ((float)random(-10,10))/100;
+
+}
 
 // *** motor functions ***
 
@@ -237,7 +357,7 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirVal);
     Wire.write(speedReg);
     Wire.write(speedVal);
-  Wire.endTransmission(true);
+  Wire.endTransmission();
 //  Serial.print("Wire return: ");
 //  Serial.println(b);
   
