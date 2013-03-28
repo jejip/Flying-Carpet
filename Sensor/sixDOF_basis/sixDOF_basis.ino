@@ -21,9 +21,9 @@ void setup() {
 
 void loop() { 
   
-  sixDOF.getAngles(angles);
+  sixDOF.getEuler(angles);
 
-  Serial.println(angles[1]); //only display theta
+  Serial.println(angles[2]); //only display theta
   
   delay(100); 
 }
