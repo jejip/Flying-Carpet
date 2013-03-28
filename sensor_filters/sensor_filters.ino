@@ -22,9 +22,9 @@ int buttonState = 0; //for the killswitch
 //PID variables
 double Input, Output;
 // PID initialising variables
-double Kp = 100;
+double Kp = 160;
 double Ki = 6;
-double Kd = 32;
+double Kd = 16;
 double Setpoint = 0;
 
 //Specify the links and initial tuning parameters
