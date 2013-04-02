@@ -19,15 +19,15 @@ int buttonState = 0; //for the killswitch
 // *** PID ***
 
 //PID variables
-double Input, dInput, Output;
+double Input, Output;
 // PID initialising variables
-double Kp = 160;
+double Kp = 930;
 double Ki = 0;
 double Kd = 0;
 double Setpoint = 0;
 
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &dInput, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
+PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 unsigned long serialTime; //this will help us know when to talk with processing
 
@@ -44,7 +44,7 @@ byte motorDir = 1; //richting van de motor, naar voren of achteren
 
 void setup(){
   
-  Serial.begin(9600);                    // activeer serial communicatie
+  Serial.begin(115200);                    // activeer serial communicatie
   Wire.begin();                         // initialiseer I2C communicatiemet sensor 
   delay(5);
   sensor.init();                         // begin the IMU
@@ -90,15 +90,15 @@ void loop(){
   
   //dInput heoksnelheid
 
-  
+  angle += 3.15; //offset
   //Filters voor de hoek
   constrain(angle, -21, 21); //high pass
   
-  if(angle <= 2 && angle >= -2){ //low-pass filter ??is dit wel nodig??
-    angle = 0;
-  }
+//  if(angle <= 2 && angle >= -2){ //low-pass filter ??is dit wel nodig??
+//    angle = 0;
+//  }
   //bepaal de motorrichting
-  else if(angle > 0){
+  if(angle > 0){
     angle = angle * -1;
     motorDir = 1;
   } 
@@ -106,9 +106,13 @@ void loop(){
     motorDir = 2;
   }
   
+  //snelheid bepalen
+//  speedhhoek
+  
+  
  // output berekenen met PID, input is de hoekin radialen.
   Input = (angle * (3.14159/180));
-  dInput = (angle * (3.14159/180));
+
   myPID.Compute();
   
     //send-receive with processing if it's time
@@ -116,7 +120,7 @@ void loop(){
   {
     SerialReceive();
     SerialSend();
-    serialTime+=2;
+    serialTime+=20;
   }
   
     //killswitch, voordat hij waardes naar de motor stuurt
