@@ -38,10 +38,10 @@ unsigned long serialTime; //this will help us know when to talk with processing
 //double kpmodel=1.5, taup=100, theta[50];
 //double outputStart=5;
 //double aTuneStep=50, aTuneNoise=1, aTuneStartValue=100;
-//unsigned int aTuneLookBack=20;
+//unsigned int aTuneLookBack=1;
 //
 //boolean tuning = false;
-//unsigned long  modelTime, serialTime;
+//unsigned long  modelTime;
 //
 //PID_ATune aTune(&Input, &Output);
 //
