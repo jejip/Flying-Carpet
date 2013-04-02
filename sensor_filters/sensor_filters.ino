@@ -19,15 +19,15 @@ int buttonState = 0; //for the killswitch
 // *** PID ***
 
 //PID variables
-double Input, Output;
+double Input, dInput, Output;
 // PID initialising variables
 double Kp = 160;
-double Ki = 6;
-double Kd = 16;
+double Ki = 0;
+double Kd = 0;
 double Setpoint = 0;
 
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
+PID myPID(&Input, &dInput, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 unsigned long serialTime; //this will help us know when to talk with processing
 
@@ -36,12 +36,10 @@ unsigned long serialTime; //this will help us know when to talk with processing
 
 float angles[3];
 float angle;
-double offset;
 
 FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
-//I2C
-byte motorDir = 1;
+byte motorDir = 1; //richting van de motor, naar voren of achteren
 
 
 void setup(){
@@ -75,32 +73,29 @@ void setup(){
 
   
   //turn the PID on
-  myPID.SetMode(AUTOMATIC);  
+  myPID.SetMode(AUTOMATIC); 
 
 //killswitch on pin 2
   pinMode(2, INPUT);     
-
+  
 }
-
 
 void loop(){
     
-  //set the calibration LED
+  //beginning loop, set the calibration LED
   digitalWrite(13, HIGH);
   
   sensor.getEuler(angles);
-  angle = angles[2]-offset;
+  angle = angles[2];
+  
+  //dInput heoksnelheid
+
   
   //Filters voor de hoek
-  if(angle <= 2 && angle >= -2){ //low-pass filter
+  constrain(angle, -21, 21); //high pass
+  
+  if(angle <= 2 && angle >= -2){ //low-pass filter ??is dit wel nodig??
     angle = 0;
-  }
-  //high pass filter
-  else if(angle >= 21){ 
-    angle = -21;
-  }
-  else if(angle <= -21){
-    angle = -21;
   }
   //bepaal de motorrichting
   else if(angle > 0){
@@ -113,6 +108,7 @@ void loop(){
   
  // output berekenen met PID, input is de hoekin radialen.
   Input = (angle * (3.14159/180));
+  dInput = (angle * (3.14159/180));
   myPID.Compute();
   
     //send-receive with processing if it's time
@@ -120,7 +116,7 @@ void loop(){
   {
     SerialReceive();
     SerialSend();
-    serialTime+=20;
+    serialTime+=2;
   }
   
     //killswitch, voordat hij waardes naar de motor stuurt
