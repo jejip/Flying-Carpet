@@ -15,11 +15,17 @@
 
 int buttonState = 0; //for the killswitch
 
+int oldt = 0;
+int angledelta;
+int angleold;
+int anglespeed = 0;
+
+int delta = 100; //time for calculating speed
 
 // *** PID ***
 
 //PID variables
-double Input, Output;
+double Input, dInput, Output;
 // PID initialising variables
 double Kp = 930;
 double Ki = 0;
@@ -27,7 +33,7 @@ double Kd = 0;
 double Setpoint = 0;
 
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
+PID myPID(&Input, &dInput, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 unsigned long serialTime; //this will help us know when to talk with processing
 
@@ -107,12 +113,18 @@ void loop(){
   }
   
   //snelheid bepalen
-//  speedhhoek
-  
+  if (millis()+delta > oldt)
+  {
+  angledelta = (angle - angleold);
+  anglespeed = (angledelta / delta);
+  //reset variables
+  oldt = millis();
+  angleold = angle;
+  }
   
  // output berekenen met PID, input is de hoekin radialen.
   Input = (angle * (3.14159/180));
-
+  dInput = (anglespeed * (3.14159/180));
   myPID.Compute();
   
     //send-receive with processing if it's time
