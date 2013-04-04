@@ -15,6 +15,7 @@
 
 int buttonState = 0; //for the killswitch
 
+// voor hoeksnelheid
 int oldt = 0;
 int angledelta;
 int angleold;
@@ -29,8 +30,10 @@ double Input, dInput, Output;
 // PID initialising variables
 double Kp = 930;
 double Ki = 0;
-double Kd = 10;
+double Kd = 20;
 double Setpoint = 0;
+double startKp = 150; // Kp value for start position
+double start2Kp = 350; //Kp for between start and normal
 
 //Specify the links and initial tuning parameters
 PID myPID(&Input, &dInput, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
@@ -51,38 +54,16 @@ byte motorDir = 1; //richting van de motor, naar voren of achteren
 void setup(){
   
   Serial.begin(115200);                    // activeer serial communicatie
-  Wire.begin();                         // initialiseer I2C communicatiemet sensor 
+  Wire.begin();                         // initialiseer I2C communicatie
   delay(5);
   sensor.init();                         // begin the IMU
   delay(5);
   
-//  Serial.print("reset");
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0);
-  
-//  // calibreren van de sensor neemt de gemiddelde sensor waarde van 3 seconden, 
-//  // vervolgens meet hij de hoek nog een keer, als de error groter is dan 1 graden begint de calibratie opnieuw
-//  double offset = 0;
-//  double check = 1000;
-//  while (abs(offset - check) > 1){
-//    for(int i = 0; i < 30; i++){
-//    sensor.getEuler(angles);
-//    offset += angles[2];
-//    delay(10);
-//    }
-//    offset = offset / 30;
-//    sensor.getEuler(angles);
-//    check = angles[2];
-//  }  
-//  sensor.getEuler(angles);
-//  Input = angles[2] - offset;
-  
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0); //setup motor
 
-  
-  //turn the PID on
-  myPID.SetMode(AUTOMATIC); 
+  myPID.SetMode(AUTOMATIC); //turn the PID on
 
-//killswitch on pin 2
-  pinMode(2, INPUT);     
+  pinMode(2, INPUT); //killswitch on pin 2
   
 }
 
@@ -96,13 +77,24 @@ void loop(){
   
   //dInput heoksnelheid
 
-  angle += 3.15; //offset
+  angle += 3.15; //offset voor de sensorplaatsing
   //Filters voor de hoek
   constrain(angle, -21, 21); //high pass
   
-//  if(angle <= 2 && angle >= -2){ //low-pass filter ??is dit wel nodig??
-//    angle = 0;
-//  }
+  if(angle > 18 || angle < -18) //andere P waarde voor opstaan
+  {
+    myPID.SetTunings(startKp, Ki, Kd);
+  }
+  else if(angle > 12 || angle < -12) //andere P waarde voor opstaan
+  {
+    myPID.SetTunings(start2Kp, Ki, Kd);
+  }
+  else
+  {
+    myPID.SetTunings(Kp, Ki, Kd);
+  }
+  
+//  
   //bepaal de motorrichting
   if(angle > 0){
     angle = angle * -1;
@@ -112,7 +104,7 @@ void loop(){
     motorDir = 2;
   }
   
-  //snelheid bepalen
+  //hoeksnelheid bepalen voor D
   if (millis()+delta > oldt)
   {
   angledelta = (angle - angleold);

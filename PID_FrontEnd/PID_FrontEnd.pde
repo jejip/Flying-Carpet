@@ -27,7 +27,7 @@ int windowHeight = 600;     // form
 
 float InScaleMin = -.5;       // set the Y-Axis Min
 float InScaleMax = 0;    // and Max for both
-float OutScaleMin = -255;      // the top and 
+float OutScaleMin = 0;      // the top and 
 float OutScaleMax = 255;    // bottom trends
 
 

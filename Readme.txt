@@ -1,26 +1,26 @@
 How to use:
 
-	Arduino Libraries used:
+	Arduino Libraries to install:
 	FreeSixIMU
-	Matrix
 	PID_v1
 
- 
+	Processing Libraries to install:
+	ControlP5
 
-Packages used:
 
 Libraries: 
 
-IMU 6 degrees:
-6dof(Arduino)[V7]
-http://bildr.org/2012/03/stable-orientation-digital-imu-6dof-arduino/
+	IMU 6 degrees:
+	6dof(Arduino)[V7]
+	http://bildr.org/2012/03/stable-orientation-digital-imu-6dof-arduino/
+	derivative of the FreeSixIMU
 
-Free IMU:
-FreeIMU-20121122_1126
-http://www.varesano.net/projects/hardware/FreeIMU
-http://freeimu.varesano.net/ [forum]
+	Arduino PID:
+	By Brett Beauregard
+	http://playground.arduino.cc/Code/PIDLibrary
 
+	Arduino PID frontend
 
-Calibration (on windows):
-FreeIMU_GUI-0.2-win32
-http://www.varesano.net/blog/fabio/freeimu-magnetometer-and-accelerometer-calibration-gui-alpha-version-out
+	ControlP5:
+	by Andreas Schlegel
+	http://www.sojamo.de/libraries/controlP5/
