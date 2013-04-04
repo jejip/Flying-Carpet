@@ -29,7 +29,7 @@ double Input, dInput, Output;
 // PID initialising variables
 double Kp = 930;
 double Ki = 0;
-double Kd = 0;
+double Kd = 10;
 double Setpoint = 0;
 
 //Specify the links and initial tuning parameters

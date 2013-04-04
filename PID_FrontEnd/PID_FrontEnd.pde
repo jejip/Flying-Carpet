@@ -25,8 +25,8 @@ import controlP5.*;
 int windowWidth = 900;      // set the size of the 
 int windowHeight = 600;     // form
 
-float InScaleMin = -2;       // set the Y-Axis Min
-float InScaleMax = 2;    // and Max for both
+float InScaleMin = -.5;       // set the Y-Axis Min
+float InScaleMax = 0;    // and Max for both
 float OutScaleMin = -255;      // the top and 
 float OutScaleMax = 255;    // bottom trends
 
