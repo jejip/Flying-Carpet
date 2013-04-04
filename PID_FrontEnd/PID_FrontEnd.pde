@@ -89,7 +89,7 @@ void setup()
   size(windowWidth , windowHeight);
 
   println(Serial.list());                                           // * Initialize Serial
-  myPort = new Serial(this, Serial.list()[4], 9600);                //   Communication with
+  myPort = new Serial(this, Serial.list()[4], 115200);                //   Communication with
   myPort.bufferUntil(10);                                           //   the Arduino
 
   controlP5 = new ControlP5(this);                                  // * Initialize the various
