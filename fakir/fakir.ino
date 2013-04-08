@@ -20,8 +20,9 @@ int oldt = 0;
 int angledelta;
 int angleold;
 int anglespeed = 0;
-
 int delta = 100; //time for calculating speed
+
+int totalspeed = 0;
 
 // *** PID ***
 
@@ -50,6 +51,12 @@ FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
 byte motorDir = 1; //richting van de motor, naar voren of achteren
 
+byte b_left, b_right;
+
+// *** Steering parameters***
+int steerPin = A0;
+int steerValue;
+int steerOffset_left, steerOffset_right;
 
 void setup(){
   
@@ -81,6 +88,7 @@ void loop(){
   //Filters voor de hoek
   constrain(angle, -21, 21); //high pass
   
+  //Adaptive PID tuning voor opstaan
   if(angle > 18 || angle < -18) //andere P waarde voor opstaan
   {
     myPID.SetTunings(startKp, Ki, Kd);
@@ -94,7 +102,7 @@ void loop(){
     myPID.SetTunings(Kp, Ki, Kd);
   }
   
-//  
+
   //bepaal de motorrichting
   if(angle > 0){
     angle = angle * -1;
@@ -138,9 +146,30 @@ if(buttonState == HIGH){ //als de switch naar zwart staat, ga uit
     myPID.SetMode(AUTOMATIC); //zet anders de PID aan
   }
   
+  
+    // Bereken stuur waarden en pas zetoeop de output.
+  
+  steerValue = analogRead(steerPin);
+ if(steerValue < 300){
+   steerOffset_left = (300 - steerValue)/100 * 5;
+   steerOffset_right = -steerOffset_left;
+ }
+ else if(steerValue > 723){
+   steerOffset_right = (steerValue - 723)/100 * 5;
+   steerOffset_left = -steerOffset_right;
+ }
+ else {
+   steerOffset_left = 0;
+   steerOffset_right = 0;
+ }
+   
+  
   //stuur data naar de motor
-  byte b = (byte)Output;
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, b); 
+  b_left = (byte)Output + steerOffset_left;
+  b_right = (byte)Output + steerOffset_right;
+  
+  //stuur data naar de motor
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, b_left, b_right); 
 
 
 } //end loop
@@ -247,12 +276,12 @@ void SerialSend()
 
 // *** motor functions ***
 
-void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         // Function for sending data to MD03
+void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal_left, byte speedVal_right){         // Function for sending data to MD03
   Wire.beginTransmission(ADDRESS1);         // Send data to MD03
     Wire.write(dirReg);
     Wire.write(dirVal);
     Wire.write(speedReg);
-    Wire.write(speedVal);
+    Wire.write(speedVal_left);
   Wire.endTransmission();
 //  Serial.print("Wire return: ");
 //  Serial.println(b);
@@ -261,18 +290,11 @@ void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal){         /
     Wire.write(dirReg);
     Wire.write(dirVal);
     Wire.write(speedReg);
-    Wire.write(speedVal);
+    Wire.write(speedVal_right);
   Wire.endTransmission();
 //  Serial.println(b);  
-}
+}  
 
-//void sendPlotData(String seriesName, float data){
-//    Serial.print("{");
-//    Serial.print(seriesName);
-//    Serial.print(",T,");
-//    Serial.print(data);
-//    Serial.println("}");
-//} 
 
 
   
