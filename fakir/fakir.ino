@@ -56,7 +56,9 @@ byte b_left, b_right;
 // *** Steering parameters***
 int steerPin = A0;
 int steerValue;
-int steerOffset_left, steerOffset_right;
+//int steerOffset_left, steerOffset_right;
+
+double left, right;
 
 void setup(){
   
@@ -66,7 +68,7 @@ void setup(){
   sensor.init();                         // begin the IMU
   delay(5);
   
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0); //setup motor
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0, 0); //setup motor
 
   myPID.SetMode(AUTOMATIC); //turn the PID on
 
@@ -138,7 +140,7 @@ void loop(){
     //killswitch, voordat hij waardes naar de motor stuurt
 buttonState = digitalRead(8);
 
-if(buttonState == HIGH){ //als de switch naar zwart staat, ga uit
+if(buttonState == LOW){ //als de switch naar zwart staat, ga uit
   Output = 0;
   myPID.SetMode(MANUAL); //zet de PID uit
   }
@@ -147,26 +149,36 @@ if(buttonState == HIGH){ //als de switch naar zwart staat, ga uit
   }
   
   
-    // Bereken stuur waarden en pas zetoeop de output.
-  
+    // Bereken stuur waarden en pas ze toe op de output.
   steerValue = analogRead(steerPin);
- if(steerValue < 300){
-   steerOffset_left = (300 - steerValue)/100 * 5;
-   steerOffset_right = -steerOffset_left;
- }
- else if(steerValue > 723){
-   steerOffset_right = (steerValue - 723)/100 * 5;
-   steerOffset_left = -steerOffset_right;
- }
- else {
-   steerOffset_left = 0;
-   steerOffset_right = 0;
- }
+  if(angle >= .5 && angle <= -.5 ){
+     if(steerValue < 300){
+       left  = Output + 20;
+       right = Output - 20;
+//       steerOffset_left = 100; //(int)(300 - steerValue)/100;
+//       steerOffset_right =-100; // -steerOffset_left;
+     }
+     else if(steerValue > 723){
+        left = Output - 20;
+        right = Output + 20;       
+//       steerOffset_right = 100; //(int)(steerValue - 723)/100;
+//       steerOffset_left = -100; //-steerOffset_right;
+     }
+     else {
+       left = Output;
+       right = Output;
+//       steerOffset_left = 0;
+//       steerOffset_right = 0;
+     }
+  }
    
   
   //stuur data naar de motor
-  b_left = (byte)Output + steerOffset_left;
-  b_right = (byte)Output + steerOffset_right;
+  b_left = (byte)left;
+  b_right = (byte)right;
+  
+//  b_left = (byte)Output; // + (byte)steerOffset_left;
+//  b_right = (byte)Output; // + (byte)steerOffset_right;
   
   //stuur data naar de motor
   sendData(CMDBYTE, motorDir, SPEEDBYTE, b_left, b_right); 
