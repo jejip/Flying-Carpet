@@ -2,24 +2,24 @@ void stuurled()
 {
   if (left > Output)
        {
-         analogWrite(10, HIGH);
+         digitalWrite(10, 255);
        }
        else
        {
-         analogWrite(10, LOW);
+         digitalWrite(10, 50);
        }
        if (right > Output)
        {
-         analogWrite(11, HIGH);
+         digitalWrite(11, 255);
        }
        else
        {
-         analogWrite(11, LOW);
+         digitalWrite(11, 50);
        }    
 }
 
 void calibrationled()
 {
-   analogWrite(10, ledval);
-   analogWrite(11, ledval);
+   analogWrite(10, 50);
+   analogWrite(11, 50);
 }

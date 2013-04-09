@@ -29,7 +29,7 @@ int delta = 100; //time for calculating speed
 double Input, dInput, Output;
 // PID initialising variables
 double Kp = 930;
-double Ki = 0;
+double Ki = 20;
 double Kd = 20;
 double Setpoint = 0;
 double startKp = 150; // Kp value for start position
@@ -81,8 +81,7 @@ void loop(){
     
   //beginning loop, set the calibration LED on
   digitalWrite(13, HIGH);
-  analogWrite(10, 20);
-  analogWrite(11, 20);
+  calibrationled();
   
   //Angles
   sensor.getEuler(angles);
@@ -135,13 +134,13 @@ void loop(){
   steerValue = analogRead(steerPin);
 
      if(steerValue < 500){
-       left  = Output + (510 - steerValue) / 25;
-       right = Output - (510 - steerValue) / 25;
+       right  = Output + (510 - steerValue) / 15;
+       left = Output; //- 10(510 - steerValue) / 25;
      }
 
      else if(steerValue > 523){
-        left = Output - (steerValue - 513) / 25;
-        right = Output + (steerValue - 513) / 25;       
+        right = Output; //- 10(steerValue - 513) / 25;
+        left = Output + (steerValue - 513) / 15;       
      }
 
      else {
@@ -149,8 +148,8 @@ void loop(){
        right = Output;
      }
   
-     stuurled();  //LEDjes voor richting aangeven
-     
+    stuurled();  //LEDjes voor richting aangeven
+
      //stuur data naar de motor
   b_left = (byte)left;
   b_right = (byte)right;
@@ -167,9 +166,11 @@ void loop(){
   }
   
       //killswitch, voordat hij waardes naar de motor stuurt
-kill = digitalRead(8);
+kill = digitalRead(7);
 if(kill == HIGH){ //als de switch naar zwart staat, ga uit
-  Output = 0; //zorg dat de motoren uit staan
+  Output = 0;
+  b_left = 0; //zorg dat de motoren uit staan
+  b_right = 0;
   myPID.SetMode(MANUAL); //zet de PID uit
   }
   else{
