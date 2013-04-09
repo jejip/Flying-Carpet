@@ -44,7 +44,8 @@ unsigned long serialTime; //this will help us know when to talk with processing
 /// *** Sensor ***
 
 float angles[3];
-float angle;
+float angle, yaw, pitch, roll;
+
 
 FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
@@ -85,7 +86,14 @@ void loop(){
   
   //Angles
   sensor.getEuler(angles);
-  angle = angles[2];
+  roll = angles[2]* (3.14159/180);
+  pitch = angles[1]* (3.14159/180);
+  yaw = angles[0]* (3.14159/180);
+  
+  //angles for turning
+  
+  angle = cos(yaw)*roll + sin(yaw)*pitch;
+
 
   angle += 3.15; //offset voor de sensorplaatsing
   constrain(angle, -21, 21); //high pass filter voor de hoek
@@ -126,8 +134,8 @@ void loop(){
   }
   
  // output berekenen met PID, input is de hoek in radialen.
-  Input = (angle * (3.14159/180));
-  dInput = (anglespeed * (3.14159/180));
+  Input = (angle);// * (3.14159/180));
+  dInput = (anglespeed);// * (3.14159/180));
   myPID.Compute();
   
     // Bereken stuur waarden en pas ze toe op de output.
