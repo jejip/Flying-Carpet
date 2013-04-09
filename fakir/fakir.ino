@@ -132,24 +132,23 @@ void loop(){
   
     // Bereken stuur waarden en pas ze toe op de output.
   steerValue = analogRead(steerPin);
-     if(steerValue < 300){
-       left  = Output + 10;
-       right = Output;
-//       steerOffset_left = 100; //(int)(300 - steerValue)/100;
-//       steerOffset_right =-100; // -steerOffset_left;
+
+  if(angle >= .5 && angle <= -.5 ){
+     if(steerValue <= 500){
+       left  = Output + (500 - steerValue) / 25;
+       right = Output - (500 - steerValue) / 25;
      }
-     else if(steerValue > 723){
-        left = Output;
-        right = Output + 10;       
-//       steerOffset_right = 100; //(int)(steerValue - 723)/100;
-//       steerOffset_left = -100; //-steerOffset_right;
+
+     else if(steerValue >= 523){
+        left = Output - (steerValue - 523) / 25;
+        right = Output + (steerValue - 523) / 25;       
      }
+
      else {
        left = Output;
        right = Output;
-//       steerOffset_left = 0;
-//       steerOffset_right = 0;
      }
+  }
   
        //LEDjes voor richting aangeven
      if (left > Output)
@@ -162,11 +161,11 @@ void loop(){
      }
      if (right > Output)
      {
-       digitalWrite(10, HIGH);
+       digitalWrite(11, HIGH);
      }
      else
      {
-       digitalWrite(10, LOW);
+       digitalWrite(11, LOW);
      }
      //stuur data naar de motor
   b_left = (byte)left;
@@ -185,7 +184,6 @@ void loop(){
   
       //killswitch, voordat hij waardes naar de motor stuurt
 buttonState = digitalRead(8);
-
 if(buttonState == LOW){ //als de switch naar zwart staat, ga uit
   Output = 0;
   myPID.SetMode(MANUAL); //zet de PID uit
@@ -194,12 +192,8 @@ if(buttonState == LOW){ //als de switch naar zwart staat, ga uit
     myPID.SetMode(AUTOMATIC); //zet anders de PID aan
   }
   
-  //stuur data naar de motor
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, b_left, b_right); 
+  
+  sendData(CMDBYTE, motorDir, SPEEDBYTE, b_left, b_right); //stuur data naar de motor
 
 
 } //end loop
-
-
-  
-
