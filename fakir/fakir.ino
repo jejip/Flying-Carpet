@@ -86,17 +86,16 @@ void loop(){
   
   //Angles
   sensor.getEuler(angles);
-  roll = angles[2]* (3.14159/180);
-  pitch = angles[1]* (3.14159/180);
+  roll = angles[2]* (3.14159/180)+0.054;
+  pitch = angles[1]* (-3.14159/180);
   yaw = angles[0]* (3.14159/180);
   
   //angles for turning
-  
-  angle = cos(yaw)*roll + sin(yaw)*pitch;
+    angle = cos(yaw)*roll + sin(yaw)*pitch;
 
 
-  angle += 3.15; //offset voor de sensorplaatsing
-  constrain(angle, -21, 21); //high pass filter voor de hoek
+  //angle += 0.054; //3.15 graden; //offset voor de sensorplaatsing
+  constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden
   
   
   //Adaptive PID tuning voor opstaan
@@ -142,13 +141,13 @@ void loop(){
   steerValue = analogRead(steerPin);
 
      if(steerValue < 500){
-       right  = Output + (510 - steerValue) / 15;
-       left = Output; //- 10(510 - steerValue) / 25;
+       left  = Output + (510 - steerValue) / 15;
+       right = Output; //- 10(510 - steerValue) / 25;
      }
 
      else if(steerValue > 523){
-        right = Output; //- 10(steerValue - 513) / 25;
-        left = Output + (steerValue - 513) / 15;       
+        left = Output; //- 10(steerValue - 513) / 25;
+        right = Output + (steerValue - 513) / 15;       
      }
 
      else {
@@ -175,7 +174,7 @@ void loop(){
   
       //killswitch, voordat hij waardes naar de motor stuurt
 kill = digitalRead(7);
-if(kill == HIGH){ //als de switch naar zwart staat, ga uit
+if(kill == LOW){ //ga uit 
   Output = 0;
   b_left = 0; //zorg dat de motoren uit staan
   b_right = 0;
