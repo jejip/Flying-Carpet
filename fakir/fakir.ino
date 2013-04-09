@@ -13,7 +13,8 @@
 #define TEMPREG             0x04                    // Byte to read temprature
 #define CURRENTREG          0x05                    // Byte to read motor current
 
-int buttonState = 0; //for the killswitch
+int kill = 0; //for the killswitch
+int ledval = 1; //led value 
 
 // voor hoeksnelheid
 int oldt = 0;
@@ -21,8 +22,6 @@ int angledelta;
 int angleold;
 int anglespeed = 0;
 int delta = 100; //time for calculating speed
-
-int totalspeed = 0;
 
 // *** PID ***
 
@@ -51,14 +50,14 @@ FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
 byte motorDir = 1; //richting van de motor, naar voren of achteren
 
-byte b_left, b_right;
 
 // *** Steering parameters***
+
+byte b_left, b_right;
 int steerPin = A0;
 int steerValue;
-//int steerOffset_left, steerOffset_right;
-
 double left, right;
+
 
 void setup(){
   
@@ -72,23 +71,26 @@ void setup(){
 
   myPID.SetMode(AUTOMATIC); //turn the PID on
 
-  pinMode(2, INPUT); //killswitch on pin 2
+  pinMode(2, INPUT); //killswitch on pin 2 is input
+  pinMode(10, OUTPUT); //led
+  pinMode(11, OUTPUT); //led
   
 }
 
 void loop(){
     
-  //beginning loop, set the calibration LED
+  //beginning loop, set the calibration LED on
   digitalWrite(13, HIGH);
+  analogWrite(10, 20);
+  analogWrite(11, 20);
   
+  //Angles
   sensor.getEuler(angles);
   angle = angles[2];
-  
-  //dInput heoksnelheid
 
   angle += 3.15; //offset voor de sensorplaatsing
-  //Filters voor de hoek
-  constrain(angle, -21, 21); //high pass
+  constrain(angle, -21, 21); //high pass filter voor de hoek
+  
   
   //Adaptive PID tuning voor opstaan
   if(angle > 18 || angle < -18) //andere P waarde voor opstaan
@@ -124,49 +126,31 @@ void loop(){
   angleold = angle;
   }
   
- // output berekenen met PID, input is de hoekin radialen.
+ // output berekenen met PID, input is de hoek in radialen.
   Input = (angle * (3.14159/180));
   dInput = (anglespeed * (3.14159/180));
   myPID.Compute();
   
-  
     // Bereken stuur waarden en pas ze toe op de output.
   steerValue = analogRead(steerPin);
 
-  if(angle >= .5 && angle <= -.5 ){
-     if(steerValue <= 500){
-       left  = Output + (500 - steerValue) / 25;
-       right = Output - (500 - steerValue) / 25;
+     if(steerValue < 500){
+       left  = Output + (510 - steerValue) / 25;
+       right = Output - (510 - steerValue) / 25;
      }
 
-     else if(steerValue >= 523){
-        left = Output - (steerValue - 523) / 25;
-        right = Output + (steerValue - 523) / 25;       
+     else if(steerValue > 523){
+        left = Output - (steerValue - 513) / 25;
+        right = Output + (steerValue - 513) / 25;       
      }
 
      else {
        left = Output;
        right = Output;
      }
-  }
   
-       //LEDjes voor richting aangeven
-     if (left > Output)
-     {
-       digitalWrite(10, HIGH);
-     }
-     else
-     {
-       digitalWrite(10, LOW);
-     }
-     if (right > Output)
-     {
-       digitalWrite(11, HIGH);
-     }
-     else
-     {
-       digitalWrite(11, LOW);
-     }
+     stuurled();  //LEDjes voor richting aangeven
+     
      //stuur data naar de motor
   b_left = (byte)left;
   b_right = (byte)right;
@@ -183,9 +167,9 @@ void loop(){
   }
   
       //killswitch, voordat hij waardes naar de motor stuurt
-buttonState = digitalRead(8);
-if(buttonState == LOW){ //als de switch naar zwart staat, ga uit
-  Output = 0;
+kill = digitalRead(8);
+if(kill == HIGH){ //als de switch naar zwart staat, ga uit
+  Output = 0; //zorg dat de motoren uit staan
   myPID.SetMode(MANUAL); //zet de PID uit
   }
   else{
