@@ -38,7 +38,7 @@ double start2Kp = 350; //Kp for between start and normal
 //Specify the links and initial tuning parameters
 PID myPID(&Input, &dInput, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
-unsigned long serialTime; //this will help us know when to talk with processing
+//unsigned long serialTime; //this will help us know when to talk with processing
 
 
 /// *** Sensor ***
@@ -165,12 +165,12 @@ void loop(){
 //  b_right = (byte)Output; // + (byte)steerOffset_right;
   
       //send-receive with processing if it's time
-  if(millis()>serialTime)
-  {
-    SerialReceive();
-    SerialSend();
-    serialTime+=20;
-  }
+//  if(millis()>serialTime)
+//  {
+//    SerialReceive();
+//    SerialSend();
+//    serialTime+=20;
+//  }
   
       //killswitch, voordat hij waardes naar de motor stuurt
 kill = digitalRead(7);
