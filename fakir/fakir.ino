@@ -34,7 +34,7 @@ int delta = 100; //time for calculating speed
 double Input, dInput, Output;
 // PID initialising variables
 double Kp = 930;
-double Ki = 20;
+double Ki = 5;
 double Kd = 20;
 double Setpoint = 0;
 
@@ -88,21 +88,20 @@ void setup(){
 void loop(){
     
   //beginning loop, set the calibration LED on
-//  digitalWrite(13, HIGH);
+ digitalWrite(13, HIGH);
 //  calibrationled();
   
   //Angles
-  sensor.getEuler(angles);
+  sensor.getEuler(angles); //krijg de euler hoek door
+  //Bereken meteen de radialen uit de hoek
   roll = angles[2]* (3.14159/180)+0.04;
   pitch = angles[1]* (-3.14159/180)+0.04;
   yaw = angles[0]* (3.14159/180);
   
-  //angles for turning
+  //switch angles for turning
     angle = cos(yaw)*roll + sin(yaw)*pitch;
 
-
-  //angle += 0.054; //3.15 graden; //offset voor de sensorplaatsing
-  constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden
+  constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden, want mechanisch kan die geen grotere hoek maken
   
   
   //Adaptive PID tuning voor opstaan
@@ -110,7 +109,7 @@ void loop(){
   {
     myPID.SetTunings(startKp, Ki, Kd);
   }
-  else if(angle > 12 * (3.14159/180) || angle < -12 * (3.14159/180) ) //andere P waarde voor opstaan
+  else if(angle > 12 * (3.14159/180) || angle < -12 * (3.14159/180) ) //andere P waarde voor opstaan 2 
   {
     myPID.SetTunings(start2Kp, Ki, Kd);
   }
@@ -131,7 +130,7 @@ void loop(){
     motorDir_right = 2;
   }
   
-  //hoeksnelheid bepalen voor D
+  //hoeksnelheid bepalen voor Kd
   if (millis()+delta > oldt)
   {
   angledelta = (angle - angleold);
@@ -141,62 +140,57 @@ void loop(){
   angleold = angle;
   }
   
- // output berekenen met PID, input is de hoek in radialen.
-  Input = (angle);// * (3.14159/180));
-  dInput = (anglespeed);// * (3.14159/180));
+ // output berekenen met PID
+  Input = (angle);
+  dInput = (anglespeed);
   myPID.Compute();
   
-    // Bereken stuur waarden en pas ze toe op de output.
+    // lees stuur waarden en pas ze toe op de output.
   steerValue = analogRead(steerPin);
 
 //sturen op de plek als de hoek van de sensor is kleiener dan 2 graden draaien de wielen in tegengestelde righting.
-  if(angle * (180/4.14159) > -2){
-    if(steerValue < 500){
-       left  = Output + (510 - steerValue) / 25;
-       right = Output + (510 - steerValue) / 25;
-       int dir_right = (motorDir_left - 3) *-1;
-       motorDir_right = (byte)dir_right;
-     }
-
-     else if(steerValue > 523){
-        left = Output + (steerValue - 513) / 25;
-        right = Output + (steerValue - 513) / 25; 
-        int dir_left = (motorDir_right - 3) *-1;
-        motorDir_left = (byte)dir_left;      
-     }
- 
-     else {
-       left = Output;
-       right = Output;
-     }
-  }
+//  if(angle * (180/4.14159) > -2){
+//    if(steerValue < 500){
+//       left  = Output + (510 - steerValue) / 25;
+//       right = Output + (510 - steerValue) / 25;
+//       int dir_right = (motorDir_left - 3) *-1;
+//       motorDir_right = (byte)dir_right;
+//     }
+//
+//     else if(steerValue > 523){
+//        left = Output + (steerValue - 513) / 25;
+//        right = Output + (steerValue - 513) / 25; 
+//        int dir_left = (motorDir_right - 3) *-1;
+//        motorDir_left = (byte)dir_left;      
+//     }
+// 
+//     else {
+//       left = Output;
+//       right = Output;
+//     }
+//  }
+  
   // sturen met snelheid
-  else{
 
      if(steerValue < 500){
-       left  = Output + (510 - steerValue) / 15;
-       right = Output; //- 10(510 - steerValue) / 25;
+       right  = Output + (510 - steerValue) / 15;
+       left = Output; //- 10(510 - steerValue) / 25;
      }
 
      else if(steerValue > 523){
-        left = Output; //- 10(steerValue - 513) / 25;
-        right = Output + (steerValue - 513) / 15;       
+        right = Output; //- 10(steerValue - 513) / 25;
+        left = Output + (steerValue - 513) / 15;       
      }
 
      else {
        left = Output;
        right = Output;
      }
-  }
+ 
   
-    stuurled();  //LEDjes voor richting aangeven
-
      //stuur data naar de motor
   b_left = (byte)left;
   b_right = (byte)right;
-  
-//  b_left = (byte)Output; // + (byte)steerOffset_left;
-//  b_right = (byte)Output; // + (byte)steerOffset_right;
   
       //send-receive with processing if it's time
 //  if(millis()>serialTime)
