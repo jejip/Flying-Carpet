@@ -55,7 +55,8 @@ float angle, yaw, pitch, roll;
 
 FreeSixIMU sensor = FreeSixIMU();        // create FreeSixIMU object
 
-byte motorDir = 1; //richting van de motor, naar voren of achteren
+byte motorDir_left = 1; //richting van de motor, naar voren of achteren
+byte motorDir_right = 1;
 
 
 // *** Steering parameters***
@@ -80,7 +81,7 @@ void setup(){
   sensor.init();                         // begin the IMU
   delay(5);
   
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, 0, 0); //setup motor
+  sendData(CMDBYTE, motorDir_left, motorDir_right, SPEEDBYTE, 0, 0); //setup motor
 
   myPID.SetMode(AUTOMATIC); //turn the PID on
 }
@@ -100,17 +101,15 @@ void loop(){
   //angles for turning
     angle = cos(yaw)*roll + sin(yaw)*pitch;
 
-
   //angle += 0.054; //3.15 graden; //offset voor de sensorplaatsing
-  constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden
-  
+  constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden  
   
   //Adaptive PID tuning voor opstaan
-  if(angle > 18 || angle < -18) //andere P waarde voor opstaan
+  if(angle > 18 * (3.14159/180) || angle < -18 * (3.14159/180) ) //andere P waarde voor opstaan
   {
     myPID.SetTunings(startKp, Ki, Kd);
   }
-  else if(angle > 12 || angle < -12) //andere P waarde voor opstaan
+  else if(angle > 12 * (3.14159/180) || angle < -12 * (3.14159/180) ) //andere P waarde voor opstaan
   {
     myPID.SetTunings(start2Kp, Ki, Kd);
   }
@@ -119,14 +118,15 @@ void loop(){
     myPID.SetTunings(Kp, Ki, Kd);
   }
   
-
   //bepaal de motorrichting
   if(angle > 0){
     angle = angle * -1;
-    motorDir = 1;
+    motorDir_left = 1;
+    motorDir_right = 1;
   } 
   else{
-    motorDir = 2;
+    motorDir_left = 2;
+    motorDir_right = 2;
   }
   
   //hoeksnelheid bepalen voor D
@@ -139,14 +139,37 @@ void loop(){
   angleold = angle;
   }
   
- // output berekenen met PID, input is de hoek in radialen.
+  // output berekenen met PID, input is de hoek in radialen.
   Input = (angle);// * (3.14159/180));
   dInput = (anglespeed);// * (3.14159/180));
   myPID.Compute();
   
-    // Bereken stuur waarden en pas ze toe op de output.
+  // Bereken stuur waarden en pas ze toe op de output.    
   steerValue = analogRead(steerPin);
+  
+  //sturen op de plek als de hoek van de sensor is kleiener dan 2 graden draaien de wielen in tegengestelde righting.
+  if(angle * (180/4.14159) > -2){
+    if(steerValue < 500){
+       left  = Output + (510 - steerValue) / 25;
+       right = Output + (510 - steerValue) / 25;
+       int dir_right = (motorDir_left - 3) *-1;
+       motorDir_right = (byte)dir_right;
+     }
 
+     else if(steerValue > 523){
+        left = Output + (steerValue - 513) / 25;
+        right = Output + (steerValue - 513) / 25; 
+        int dir_left = (motorDir_right - 3) *-1;
+        motorDir_left = (byte)dir_left;      
+     }
+
+     else {
+       left = Output;
+       right = Output;
+     }
+  }
+  // sturen met snelheid
+  else{
      if(steerValue < 500){
        left  = Output + (510 - steerValue) / 15;
        right = Output; //- 10(510 - steerValue) / 25;
@@ -161,15 +184,13 @@ void loop(){
        left = Output;
        right = Output;
      }
+  }
   
     stuurled();  //LEDjes voor richting aangeven
 
      //stuur data naar de motor
   b_left = (byte)left;
   b_right = (byte)right;
-  
-//  b_left = (byte)Output; // + (byte)steerOffset_left;
-//  b_right = (byte)Output; // + (byte)steerOffset_right;
   
       //send-receive with processing if it's time
 //  if(millis()>serialTime)
@@ -192,9 +213,10 @@ if(kill == LOW){ //ga uit
     myPID.SetMode(AUTOMATIC); //zet anders de PID aan
     licht(4);
   }
+
   
   
-  sendData(CMDBYTE, motorDir, SPEEDBYTE, b_left, b_right); //stuur data naar de motor
+  sendData(CMDBYTE, motorDir_left, motorDir_right, SPEEDBYTE, b_left, b_right); //stuur data naar de motor
 
 
 } //end loop
