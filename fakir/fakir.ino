@@ -93,8 +93,8 @@ void loop(){
   
   //Angles
   sensor.getEuler(angles);
-  roll = angles[2]* (3.14159/180)+0.054;
-  pitch = angles[1]* (-3.14159/180);
+  roll = angles[2]* (3.14159/180)+0.04;
+  pitch = angles[1]* (-3.14159/180)+0.04;
   yaw = angles[0]* (3.14159/180);
   
   //angles for turning

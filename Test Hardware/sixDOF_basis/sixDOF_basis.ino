@@ -21,9 +21,11 @@ void setup() {
 
 void loop() { 
   
-  sixDOF.getValues(angles);
+ sixDOF.getEuler(angles);
 
-  Serial.println(angles[0]); //only display theta
+  Serial.print(angles[0]* (3.14159/180)); //yaw
+  Serial.print(angles[1]* (3.14159/180)); //pitch
+  Serial.println(angles[2]* (3.14159/180)); //roll
   
   delay(100); 
 }
