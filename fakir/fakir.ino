@@ -15,6 +15,7 @@
 #define CURRENTREG          0x05                    // Byte to read motor current
 
 int kill = 0; //for the killswitch
+boolean startup = false;
 
 //lichtbol variabelen
 int lightvalue;
@@ -86,7 +87,10 @@ void setup(){
 }
 
 void loop(){
-    
+  if(kill == LOW){
+    startup = true;
+  }
+  
   //beginning loop, set the calibration LED on
  digitalWrite(13, HIGH);
 //  calibrationled();
@@ -104,19 +108,19 @@ void loop(){
   constrain(angle, -.366, .366); //high pass filter voor de hoek 21 graden, want mechanisch kan die geen grotere hoek maken
   
   
-  //Adaptive PID tuning voor opstaan
-  if(angle > 18 * (3.14159/180) || angle < -18 * (3.14159/180) ) //andere P waarde voor opstaan
-  {
-    myPID.SetTunings(startKp, Ki, Kd);
-  }
-  else if(angle > 12 * (3.14159/180) || angle < -12 * (3.14159/180) ) //andere P waarde voor opstaan 2 
-  {
-    myPID.SetTunings(start2Kp, Ki, Kd);
-  }
-  else
-  {
-    myPID.SetTunings(Kp, Ki, Kd);
-  }
+//  //Adaptive PID tuning voor opstaan
+//  if(angle > 18 * (3.14159/180) || angle < -18 * (3.14159/180) ) //andere P waarde voor opstaan
+//  {
+//    myPID.SetTunings(startKp, Ki, Kd);
+//  }
+//  else if(angle > 12 * (3.14159/180) || angle < -12 * (3.14159/180) ) //andere P waarde voor opstaan 2 
+//  {
+//    myPID.SetTunings(start2Kp, Ki, Kd);
+//  }
+//  else
+//  {
+//    myPID.SetTunings(Kp, Ki, Kd);
+//  }
   
 
   //bepaal de motorrichting
@@ -209,12 +213,24 @@ if(kill == LOW){ //ga uit
   myPID.SetMode(MANUAL); //zet de PID uit
   licht(8); // zet de lamp op groen
   }
-  else{
+  else if(startup){
+    Output = 0;
+    b_left = 0; //zorg dat de motoren uit staan
+    b_right = 0;
+    myPID.SetMode(MANUAL); //zet de PID uit
+    licht(2);
+    if(angle > 5 * (3.14/180)){
+      myPID.SetMode(AUTOMATIC); //zet anders de PID aan
+      licht(4);
+    }
+    startup = false;
+  }
+  else {
     myPID.SetMode(AUTOMATIC); //zet anders de PID aan
     licht(4);
   }
   
-  
+    
   sendData(CMDBYTE, motorDir_left, motorDir_right, SPEEDBYTE, b_left, b_right); //stuur data naar de motor
 
 
