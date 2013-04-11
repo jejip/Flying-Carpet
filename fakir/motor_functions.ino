@@ -1,6 +1,6 @@
 // *** motor functions ***
-
-void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal_left, byte speedVal_right){         // Function for sending data to MD03
+// Function for sending data to MD03
+void sendData(byte dirReg, byte dirVal, byte speedReg, byte speedVal_left, byte speedVal_right){ 
   Wire.beginTransmission(ADDRESS1);         // Send data to MD03
     Wire.write(dirReg);
     Wire.write(dirVal);

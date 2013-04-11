@@ -3,6 +3,7 @@
 #include <FIMU_ITG3200.h>
 
 #include <Wire.h>
+#include <EEPROM.h>
 #include <PID_v1.h>
 
 #define ADDRESS1            0x58                    // Address of MD03 for motor 1
@@ -15,6 +16,11 @@
 
 int kill = 0; //for the killswitch
 int ledval = 1; //led value 
+
+//lichtbol variabelen
+int lightvalue;
+int bolpin = 10; //pin waar de bol aan zit
+long lastmillisbol = 0; //voor de delay
 
 // voor hoeksnelheid
 int oldt = 0;
@@ -61,8 +67,14 @@ double left, right;
 
 
 void setup(){
+//  Serial.begin(115200);                    // activeer serial communicatie
+
+  pinMode(2, INPUT); //killswitch on pin 2 is input
+  pinMode(10, OUTPUT); //bol lampen
   
-  Serial.begin(115200);                    // activeer serial communicatie
+  lightvalue = EEPROM.read(0); //lees de oude lightvalue
+  licht(6); //zet de lamp op rood
+  
   Wire.begin();                         // initialiseer I2C communicatie
   delay(5);
   sensor.init();                         // begin the IMU
@@ -71,18 +83,13 @@ void setup(){
   sendData(CMDBYTE, motorDir, SPEEDBYTE, 0, 0); //setup motor
 
   myPID.SetMode(AUTOMATIC); //turn the PID on
-
-  pinMode(2, INPUT); //killswitch on pin 2 is input
-  pinMode(10, OUTPUT); //led
-  pinMode(11, OUTPUT); //led
-  
 }
 
 void loop(){
     
   //beginning loop, set the calibration LED on
-  digitalWrite(13, HIGH);
-  calibrationled();
+//  digitalWrite(13, HIGH);
+//  calibrationled();
   
   //Angles
   sensor.getEuler(angles);
@@ -179,9 +186,11 @@ if(kill == LOW){ //ga uit
   b_left = 0; //zorg dat de motoren uit staan
   b_right = 0;
   myPID.SetMode(MANUAL); //zet de PID uit
+  licht(8); // zet de lamp op groen
   }
   else{
     myPID.SetMode(AUTOMATIC); //zet anders de PID aan
+    licht(4);
   }
   
   
